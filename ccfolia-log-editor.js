@@ -3,6 +3,7 @@ let doc = null;
 let posts = [];
 let nameColorMap = new Map();
 let tabs = new Set();
+let currentPage = 1;
 
 const fileInput = document.getElementById('fileInput');
 const postsEl = document.getElementById('posts');
@@ -16,9 +17,46 @@ const newColor = document.getElementById('newColor');
 const newText = document.getElementById('newText');
 const insertPosition = document.getElementById('insertPosition');
 
+const searchInput = document.getElementById('searchInput');
+const tabFilter = document.getElementById('tabFilter');
+const pageSizeSelect = document.getElementById('pageSizeSelect');
+const prevPageBtn = document.getElementById('prevPageBtn');
+const nextPageBtn = document.getElementById('nextPageBtn');
+const pageInfo = document.getElementById('pageInfo');
+const saveWorkBtn = document.getElementById('saveWorkBtn');
+const workFileInput = document.getElementById('workFileInput');
+
 fileInput.addEventListener('change', handleFile);
 downloadBtn.addEventListener('click', downloadEditedHtml);
 addPostBtn.addEventListener('click', addPost);
+
+searchInput.addEventListener('input', () => {
+  currentPage = 1;
+  renderPosts();
+});
+
+tabFilter.addEventListener('change', () => {
+  currentPage = 1;
+  renderPosts();
+});
+
+pageSizeSelect.addEventListener('change', () => {
+  currentPage = 1;
+  renderPosts();
+});
+
+prevPageBtn.addEventListener('click', () => {
+  currentPage--;
+  renderPosts();
+});
+
+nextPageBtn.addEventListener('click', () => {
+  currentPage++;
+  renderPosts();
+});
+
+saveWorkBtn.addEventListener('click', saveWorkJson);
+workFileInput.addEventListener('change', loadWorkJson);
 
 newName.addEventListener('change', () => {
   const color = nameColorMap.get(newName.value);
@@ -44,6 +82,9 @@ function parseHtml(html) {
   const parser = new DOMParser();
   doc = parser.parseFromString(html, 'text/html');
 
+  nameColorMap = new Map();
+  tabs = new Set();
+
   const pList = Array.from(doc.body.querySelectorAll('p'));
 
   posts = pList.map((p, index) => {
@@ -54,14 +95,11 @@ function parseHtml(html) {
     const name = (spans[1]?.textContent || '').trim();
     const text = htmlToTextareaText(spans[2]?.innerHTML || '');
 
-    if (name && color && !nameColorMap.has(name)) {
-      nameColorMap.set(name, color);
-    }
-
+    if (name && color && !nameColorMap.has(name)) nameColorMap.set(name, color);
     if (tab) tabs.add(tab);
 
     return {
-      id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + '-' + index,
+      id: makeId(index),
       color,
       tab,
       name,
@@ -70,17 +108,15 @@ function parseHtml(html) {
     };
   });
 
-  if (!tabs.size) {
-    tabs.add('main');
-    tabs.add('other');
-    tabs.add('info');
-  }
+  ensureDefaults();
 
   downloadBtn.disabled = false;
   addPostBtn.disabled = false;
+  saveWorkBtn.disabled = false;
 }
 
 function renderAll() {
+  rebuildMaps();
   renderSummary();
   renderSelectors();
   renderPosts();
@@ -93,11 +129,18 @@ function renderSummary() {
 
 function renderSelectors() {
   newTab.innerHTML = '';
+  tabFilter.innerHTML = '<option value="">すべてのタブ</option>';
+
   Array.from(tabs).forEach(tab => {
-    const option = document.createElement('option');
-    option.value = tab;
-    option.textContent = '[' + tab + ']';
-    newTab.appendChild(option);
+    const option1 = document.createElement('option');
+    option1.value = tab;
+    option1.textContent = '[' + tab + ']';
+    newTab.appendChild(option1);
+
+    const option2 = document.createElement('option');
+    option2.value = tab;
+    option2.textContent = '[' + tab + ']';
+    tabFilter.appendChild(option2);
   });
 
   newName.innerHTML = '';
@@ -116,14 +159,28 @@ function renderSelectors() {
 function renderPosts() {
   postsEl.innerHTML = '';
 
-  posts.forEach((post, index) => {
+  const filtered = getFilteredPosts();
+  const pageSize = Number(pageSizeSelect.value);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+
+  if (currentPage > totalPages) currentPage = totalPages;
+  if (currentPage < 1) currentPage = 1;
+
+  const start = (currentPage - 1) * pageSize;
+  const pageItems = filtered.slice(start, start + pageSize);
+
+  pageInfo.textContent = `${currentPage} / ${totalPages}（${filtered.length}件）`;
+  prevPageBtn.disabled = currentPage <= 1;
+  nextPageBtn.disabled = currentPage >= totalPages;
+
+  pageItems.forEach(({ post, realIndex }) => {
     const card = document.createElement('article');
     card.className = 'post-card';
     if (post.deleted) card.classList.add('is-deleted');
 
     card.innerHTML = `
       <div class="post-head">
-        <span class="post-index">#${index + 1}</span>
+        <span class="post-index">#${realIndex + 1}</span>
         <label>
           <input type="checkbox" class="delete-check" ${post.deleted ? 'checked' : ''}>
           削除
@@ -145,6 +202,12 @@ function renderPosts() {
       </div>
 
       <textarea class="text-input" rows="5">${escapeText(post.text)}</textarea>
+
+      <div class="inline-actions">
+        <button type="button" class="insert-after">この下に追加</button>
+        <button type="button" class="move-up">↑ 上へ</button>
+        <button type="button" class="move-down">↓ 下へ</button>
+      </div>
     `;
 
     card.querySelector('.delete-check').addEventListener('change', e => {
@@ -154,23 +217,58 @@ function renderPosts() {
 
     card.querySelector('.tab-input').addEventListener('input', e => {
       post.tab = e.target.value.trim();
-      if (post.tab) tabs.add(post.tab);
+      rebuildMaps();
+      renderSummary();
     });
 
     card.querySelector('.name-input').addEventListener('input', e => {
       post.name = e.target.value;
+      rebuildMaps();
+      renderSummary();
     });
 
     card.querySelector('.color-input').addEventListener('input', e => {
       post.color = e.target.value.trim();
+      rebuildMaps();
+      renderSummary();
     });
 
     card.querySelector('.text-input').addEventListener('input', e => {
       post.text = e.target.value;
     });
 
+    card.querySelector('.insert-after').addEventListener('click', () => {
+      insertPostAfter(realIndex);
+    });
+
+    card.querySelector('.move-up').addEventListener('click', () => {
+      movePost(realIndex, -1);
+    });
+
+    card.querySelector('.move-down').addEventListener('click', () => {
+      movePost(realIndex, 1);
+    });
+
     postsEl.appendChild(card);
   });
+}
+
+function getFilteredPosts() {
+  const keyword = searchInput.value.trim().toLowerCase();
+  const selectedTab = tabFilter.value;
+
+  return posts
+    .map((post, realIndex) => ({ post, realIndex }))
+    .filter(({ post }) => {
+      if (selectedTab && post.tab !== selectedTab) return false;
+
+      if (keyword) {
+        const target = `${post.tab} ${post.name} ${post.text}`.toLowerCase();
+        if (!target.includes(keyword)) return false;
+      }
+
+      return true;
+    });
 }
 
 function addPost() {
@@ -182,16 +280,13 @@ function addPost() {
   if (!name && !text) return;
 
   const post = {
-    id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+    id: makeId(Date.now()),
     tab,
     name: name || 'KP',
     color,
     text,
     deleted: false
   };
-
-  nameColorMap.set(post.name, post.color);
-  tabs.add(post.tab);
 
   if (insertPosition.value === 'top') {
     posts.unshift(post);
@@ -203,11 +298,85 @@ function addPost() {
   renderAll();
 }
 
+function insertPostAfter(index) {
+  const base = posts[index];
+
+  const post = {
+    id: makeId(Date.now()),
+    tab: base.tab || 'main',
+    name: base.name || 'KP',
+    color: base.color || '#888888',
+    text: '',
+    deleted: false
+  };
+
+  posts.splice(index + 1, 0, post);
+  renderAll();
+}
+
+function movePost(index, direction) {
+  const newIndex = index + direction;
+  if (newIndex < 0 || newIndex >= posts.length) return;
+
+  const item = posts.splice(index, 1)[0];
+  posts.splice(newIndex, 0, item);
+
+  renderPosts();
+}
+
+function saveWorkJson() {
+  const data = {
+    version: 1,
+    originalHtml,
+    posts
+  };
+
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'ccfolia-log-work.json';
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
+
+function loadWorkJson(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = () => {
+    const data = JSON.parse(reader.result);
+
+    originalHtml = data.originalHtml || '';
+    posts = data.posts || [];
+
+    if (originalHtml) {
+      const parser = new DOMParser();
+      doc = parser.parseFromString(originalHtml, 'text/html');
+    } else {
+      doc = document.implementation.createHTMLDocument('ccfolia-log');
+    }
+
+    ensureDefaults();
+
+    downloadBtn.disabled = false;
+    addPostBtn.disabled = false;
+    saveWorkBtn.disabled = false;
+
+    renderAll();
+  };
+
+  reader.readAsText(file);
+}
+
 function downloadEditedHtml() {
   const clonedDoc = doc.cloneNode(true);
 
-  const body = clonedDoc.body;
-  body.innerHTML = '\n\n' + posts
+  clonedDoc.body.innerHTML = '\n\n' + posts
     .filter(post => !post.deleted)
     .map(postToHtml)
     .join('\n\n') + '\n\n';
@@ -238,6 +407,32 @@ function postToHtml(post) {
     ${textHtml}
   </span>
 </p>`;
+}
+
+function rebuildMaps() {
+  nameColorMap = new Map();
+  tabs = new Set();
+
+  posts.forEach(post => {
+    if (post.name && post.color && !nameColorMap.has(post.name)) {
+      nameColorMap.set(post.name, post.color);
+    }
+    if (post.tab) tabs.add(post.tab);
+  });
+
+  ensureDefaults();
+}
+
+function ensureDefaults() {
+  if (!tabs.size) {
+    tabs.add('main');
+    tabs.add('other');
+    tabs.add('info');
+  }
+
+  if (!nameColorMap.size) {
+    nameColorMap.set('KP', '#888888');
+  }
 }
 
 function getColorFromStyle(style) {
@@ -283,4 +478,9 @@ function escapeText(str) {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
+}
+
+function makeId(seed) {
+  if (crypto.randomUUID) return crypto.randomUUID();
+  return String(Date.now()) + '-' + seed + '-' + Math.random();
 }
