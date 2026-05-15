@@ -1,0 +1,127 @@
+body {
+  margin: 0;
+  background: #f5f3ef;
+  color: #333;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.tool {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+h1 {
+  font-size: 22px;
+  margin-bottom: 20px;
+}
+
+h2 {
+  font-size: 16px;
+  margin: 0 0 12px;
+}
+
+.panel,
+.summary,
+.post-card {
+  background: #fff;
+  border: 1px solid #ddd6cc;
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  border: 1px solid #aaa;
+  border-radius: 999px;
+  background: #fff;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.add-panel {
+  display: grid;
+  gap: 10px;
+}
+
+.add-panel textarea {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.posts {
+  display: grid;
+  gap: 14px;
+}
+
+.post-card {
+  transition: opacity 0.2s, background 0.2s;
+}
+
+.post-card.is-deleted {
+  opacity: 0.45;
+  background: #eee;
+}
+
+.post-head {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.post-index {
+  font-size: 12px;
+  color: #777;
+}
+
+.post-grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr 120px;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.post-grid label {
+  font-size: 12px;
+  color: #666;
+}
+
+.post-grid input,
+.text-input,
+.add-panel input,
+.add-panel select,
+.add-panel textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #d6d0c7;
+  border-radius: 8px;
+  padding: 8px;
+  background: #fffdfb;
+}
+
+.text-input {
+  min-height: 90px;
+  resize: vertical;
+}
+
+@media (max-width: 700px) {
+  .tool {
+    padding: 14px;
+  }
+
+  .post-grid {
+    grid-template-columns: 1fr;
+  }
+}

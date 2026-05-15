@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>ココフォリアログ編集ツール</title>
+  <link rel="stylesheet" href="ccfolia-log-editor.css">
+</head>
+<body>
+  <main class="tool">
+    <h1>ココフォリアログ編集ツール</h1>
+
+    <section class="panel">
+      <input type="file" id="fileInput" accept=".html,text/html">
+      <button id="downloadBtn" disabled>編集済みHTMLを保存</button>
+    </section>
+
+    <section id="summary" class="summary"></section>
+
+    <section class="panel add-panel">
+      <h2>投稿を追加</h2>
+      <select id="insertPosition">
+        <option value="top">先頭に追加</option>
+        <option value="bottom">末尾に追加</option>
+      </select>
+      <select id="newTab"></select>
+      <select id="newName"></select>
+      <input id="newColor" type="text" placeholder="#888888">
+      <textarea id="newText" rows="4" placeholder="本文"></textarea>
+      <button id="addPostBtn" disabled>投稿を追加</button>
+    </section>
+
+    <section id="posts" class="posts"></section>
+  </main>
+
+  <script src="ccfolia-log-editor.js"></script>
+</body>
+</html>
