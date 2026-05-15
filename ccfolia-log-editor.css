@@ -125,3 +125,30 @@ button:disabled {
     grid-template-columns: 1fr;
   }
 }
+
+
+
+.control-panel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.control-panel input,
+.control-panel select {
+  width: auto;
+  min-width: 130px;
+}
+
+.inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.inline-actions button {
+  font-size: 12px;
+  padding: 5px 10px;
+}
