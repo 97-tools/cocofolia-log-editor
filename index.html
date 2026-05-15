@@ -16,6 +16,29 @@
 
     <section id="summary" class="summary"></section>
 
+<section class="panel control-panel">
+  <input id="searchInput" type="search" placeholder="名前・本文・タブを検索">
+
+  <select id="tabFilter">
+    <option value="">すべてのタブ</option>
+  </select>
+
+  <select id="pageSizeSelect">
+    <option value="50">50件ずつ</option>
+    <option value="100" selected>100件ずつ</option>
+    <option value="200">200件ずつ</option>
+    <option value="999999">全件表示</option>
+  </select>
+
+  <button id="prevPageBtn">前へ</button>
+  <span id="pageInfo"></span>
+  <button id="nextPageBtn">次へ</button>
+
+  <button id="saveWorkBtn" disabled>途中保存JSON</button>
+  <input type="file" id="workFileInput" accept=".json,application/json">
+</section>
+
+    
     <section class="panel add-panel">
       <h2>投稿を追加</h2>
       <select id="insertPosition">
