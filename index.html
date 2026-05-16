@@ -9,45 +9,69 @@
   <main class="tool">
     <h1>ココフォリアログ編集ツール</h1>
 
-    <section class="panel">
+<section class="top-dashboard">
+
+  <section class="dash-card dash-file">
+    <h2>ファイル</h2>
+    <div class="dash-row">
       <input type="file" id="fileInput" accept=".html,text/html">
+    </div>
+    <div class="dash-row file-actions">
       <button id="downloadBtn" disabled>編集済みHTMLを保存</button>
-    </section>
+    </div>
+  </section>
 
-    <section id="summary" class="summary"></section>
+  <section id="summary" class="dash-card dash-summary">
+    投稿 0 件 / 名前 0 種 / タブ 0 種
+  </section>
 
-<section class="panel control-panel">
-  <input id="searchInput" type="search" placeholder="名前・本文・タブを検索">
+  <section class="dash-card dash-search">
+    <h2>検索・絞り込み</h2>
+    <input id="searchInput" type="search" placeholder="名前・本文・タブを検索">
 
-  <select id="tabFilter">
-    <option value="">すべてのタブ</option>
-  </select>
+    <div class="dash-grid-2">
+      <select id="tabFilter">
+        <option value="">すべてのタブ</option>
+      </select>
 
+      <select id="statusFilter">
+        <option value="">すべての状態</option>
+        <option value="edited">編集済のみ</option>
+        <option value="added">追加のみ</option>
+        <option value="deleted">削除予定のみ</option>
+      </select>
+    </div>
+  </section>
 
+  <section class="dash-card dash-page">
+    <h2>表示・ページ</h2>
 
-  <select id="statusFilter">
-  <option value="">すべての状態</option>
-  <option value="edited">編集済のみ</option>
-  <option value="added">追加のみ</option>
-  <option value="deleted">削除予定のみ</option>
-</select>
+    <select id="pageSizeSelect">
+      <option value="50">50件ずつ</option>
+      <option value="100" selected>100件ずつ</option>
+      <option value="200">200件ずつ</option>
+      <option value="999999">全件表示</option>
+    </select>
 
-<button id="bulkDeleteVisibleBtn" disabled>表示中を一括削除</button>
-<button id="bulkRestoreVisibleBtn" disabled>表示中の削除解除</button>
+    <div class="pager-row">
+      <button id="prevPageBtn">前へ</button>
+      <span id="pageInfo">- / -</span>
+      <button id="nextPageBtn">次へ</button>
+    </div>
+  </section>
 
-  <select id="pageSizeSelect">
-    <option value="50">50件ずつ</option>
-    <option value="100" selected>100件ずつ</option>
-    <option value="200">200件ずつ</option>
-    <option value="999999">全件表示</option>
-  </select>
+  <section class="dash-card dash-action">
+    <h2>操作</h2>
 
-  <button id="prevPageBtn">前へ</button>
-  <span id="pageInfo"></span>
-  <button id="nextPageBtn">次へ</button>
+    <button id="bulkDeleteVisibleBtn" disabled>表示中を一括削除</button>
+    <button id="bulkRestoreVisibleBtn" disabled>表示中の削除解除</button>
 
-  <button id="saveWorkBtn" disabled>途中保存JSON</button>
-  <input type="file" id="workFileInput" accept=".json,application/json">
+    <div class="work-save-row">
+      <button id="saveWorkBtn" disabled>途中保存JSON</button>
+      <input type="file" id="workFileInput" accept=".json,application/json">
+    </div>
+  </section>
+
 </section>
 
     
