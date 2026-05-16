@@ -75,13 +75,14 @@ button:disabled {
   background:
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--post-color, #888888) 8%, white),
-      white
+      color-mix(in srgb, var(--post-color, #888888) 16%, white),
+      color-mix(in srgb, var(--post-color, #888888) 7%, white)
     );
 
   border-color:
-    color-mix(in srgb, var(--post-color, #888888) 18%, #ddd6cc);
+    color-mix(in srgb, var(--post-color, #888888) 28%, #ddd6cc);
 }
+
 
 .post-card.is-edited {
   border-left: 5px solid
@@ -352,4 +353,34 @@ button:disabled {
 .post-card.is-deleted .post-badge.deleted {
   background: rgba(80,80,80,0.9);
   color: white;
+}
+
+
+
+.post-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  border-radius: 999px;
+  padding: 3px 8px;
+  background: rgba(255,255,255,0.78);
+  color: #6f5a36;
+  border: 1px solid rgba(120,100,70,0.22);
+}
+
+.post-badge.added {
+  background: rgba(226,238,229,0.9);
+  color: #4f7a5b;
+}
+
+.post-badge.deleted {
+  background: rgba(90,90,90,0.78);
+  color: #fff;
+  border-color: rgba(90,90,90,0.2);
+}
+
+
+.post-card.is-edited {
+  border-left: 5px solid
+    color-mix(in srgb, var(--post-color, #888888) 70%, #c8a46a);
 }
