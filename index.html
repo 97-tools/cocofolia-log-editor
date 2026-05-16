@@ -23,6 +23,18 @@
     <option value="">すべてのタブ</option>
   </select>
 
+
+
+  <select id="statusFilter">
+  <option value="">すべての状態</option>
+  <option value="edited">編集済のみ</option>
+  <option value="added">追加のみ</option>
+  <option value="deleted">削除予定のみ</option>
+</select>
+
+<button id="bulkDeleteVisibleBtn" disabled>表示中を一括削除</button>
+<button id="bulkRestoreVisibleBtn" disabled>表示中の削除解除</button>
+
   <select id="pageSizeSelect">
     <option value="50">50件ずつ</option>
     <option value="100" selected>100件ずつ</option>
