@@ -26,6 +26,10 @@ const pageInfo = document.getElementById('pageInfo');
 const saveWorkBtn = document.getElementById('saveWorkBtn');
 const workFileInput = document.getElementById('workFileInput');
 
+const statusFilter = document.getElementById('statusFilter');
+const bulkDeleteVisibleBtn = document.getElementById('bulkDeleteVisibleBtn');
+const bulkRestoreVisibleBtn = document.getElementById('bulkRestoreVisibleBtn');
+
 fileInput.addEventListener('change', handleFile);
 downloadBtn.addEventListener('click', downloadEditedHtml);
 addPostBtn.addEventListener('click', addPost);
@@ -45,6 +49,11 @@ pageSizeSelect.addEventListener('change', () => {
   renderPosts();
 });
 
+statusFilter.addEventListener('change', () => {
+  currentPage = 1;
+  renderPosts();
+});
+
 prevPageBtn.addEventListener('click', () => {
   currentPage--;
   renderPosts();
@@ -57,6 +66,9 @@ nextPageBtn.addEventListener('click', () => {
 
 saveWorkBtn.addEventListener('click', saveWorkJson);
 workFileInput.addEventListener('change', loadWorkJson);
+
+bulkDeleteVisibleBtn.addEventListener('click', bulkDeleteVisiblePosts);
+bulkRestoreVisibleBtn.addEventListener('click', bulkRestoreVisiblePosts);
 
 newName.addEventListener('change', () => {
   const color = nameColorMap.get(newName.value);
@@ -104,7 +116,9 @@ function parseHtml(html) {
       tab,
       name,
       text,
-      deleted: false
+      deleted: false,
+      edited: false,
+      added: false
     };
   });
 
@@ -113,6 +127,8 @@ function parseHtml(html) {
   downloadBtn.disabled = false;
   addPostBtn.disabled = false;
   saveWorkBtn.disabled = false;
+  bulkDeleteVisibleBtn.disabled = false;
+  bulkRestoreVisibleBtn.disabled = false;
 }
 
 function renderAll() {
@@ -128,6 +144,8 @@ function renderSummary() {
 }
 
 function renderSelectors() {
+  const selectedTab = tabFilter.value;
+
   newTab.innerHTML = '';
   tabFilter.innerHTML = '<option value="">すべてのタブ</option>';
 
@@ -143,6 +161,12 @@ function renderSelectors() {
     tabFilter.appendChild(option2);
   });
 
+  if (selectedTab && tabs.has(selectedTab)) {
+    tabFilter.value = selectedTab;
+  }
+
+  const selectedName = newName.value;
+
   newName.innerHTML = '';
   Array.from(nameColorMap.keys()).forEach(name => {
     const option = document.createElement('option');
@@ -150,6 +174,10 @@ function renderSelectors() {
     option.textContent = name;
     newName.appendChild(option);
   });
+
+  if (selectedName && nameColorMap.has(selectedName)) {
+    newName.value = selectedName;
+  }
 
   if (newName.value) {
     newColor.value = nameColorMap.get(newName.value) || '#888888';
@@ -176,9 +204,18 @@ function renderPosts() {
   pageItems.forEach(({ post, realIndex }) => {
     const card = document.createElement('article');
     card.className = 'post-card';
+
     if (post.deleted) card.classList.add('is-deleted');
+    if (post.edited) card.classList.add('is-edited');
+    if (post.added) card.classList.add('is-added');
 
     card.innerHTML = `
+      <div class="post-badges">
+        ${post.edited ? '<span class="post-badge">編集済</span>' : ''}
+        ${post.added ? '<span class="post-badge added">追加</span>' : ''}
+        ${post.deleted ? '<span class="post-badge deleted">削除予定</span>' : ''}
+      </div>
+
       <div class="post-head">
         <span class="post-index">#${realIndex + 1}</span>
         <label>
@@ -212,29 +249,38 @@ function renderPosts() {
 
     card.querySelector('.delete-check').addEventListener('change', e => {
       post.deleted = e.target.checked;
-      card.classList.toggle('is-deleted', post.deleted);
+      post.edited = true;
+      renderPosts();
     });
 
     card.querySelector('.tab-input').addEventListener('input', e => {
       post.tab = e.target.value.trim();
+      post.edited = true;
       rebuildMaps();
       renderSummary();
+      card.classList.add('is-edited');
     });
 
     card.querySelector('.name-input').addEventListener('input', e => {
       post.name = e.target.value;
+      post.edited = true;
       rebuildMaps();
       renderSummary();
+      card.classList.add('is-edited');
     });
 
     card.querySelector('.color-input').addEventListener('input', e => {
       post.color = e.target.value.trim();
+      post.edited = true;
       rebuildMaps();
       renderSummary();
+      card.classList.add('is-edited');
     });
 
     card.querySelector('.text-input').addEventListener('input', e => {
       post.text = e.target.value;
+      post.edited = true;
+      card.classList.add('is-edited');
     });
 
     card.querySelector('.insert-after').addEventListener('click', () => {
@@ -256,11 +302,16 @@ function renderPosts() {
 function getFilteredPosts() {
   const keyword = searchInput.value.trim().toLowerCase();
   const selectedTab = tabFilter.value;
+  const selectedStatus = statusFilter.value;
 
   return posts
     .map((post, realIndex) => ({ post, realIndex }))
     .filter(({ post }) => {
       if (selectedTab && post.tab !== selectedTab) return false;
+
+      if (selectedStatus === 'edited' && !post.edited) return false;
+      if (selectedStatus === 'added' && !post.added) return false;
+      if (selectedStatus === 'deleted' && !post.deleted) return false;
 
       if (keyword) {
         const target = `${post.tab} ${post.name} ${post.text}`.toLowerCase();
@@ -285,7 +336,9 @@ function addPost() {
     name: name || 'KP',
     color,
     text,
-    deleted: false
+    deleted: false,
+    edited: true,
+    added: true
   };
 
   if (insertPosition.value === 'top') {
@@ -307,7 +360,9 @@ function insertPostAfter(index) {
     name: base.name || 'KP',
     color: base.color || '#888888',
     text: '',
-    deleted: false
+    deleted: false,
+    edited: true,
+    added: true
   };
 
   posts.splice(index + 1, 0, post);
@@ -320,6 +375,31 @@ function movePost(index, direction) {
 
   const item = posts.splice(index, 1)[0];
   posts.splice(newIndex, 0, item);
+
+  item.edited = true;
+  renderPosts();
+}
+
+function bulkDeleteVisiblePosts() {
+  const visible = getFilteredPosts();
+  if (!visible.length) return;
+
+  visible.forEach(({ post }) => {
+    post.deleted = true;
+    post.edited = true;
+  });
+
+  renderPosts();
+}
+
+function bulkRestoreVisiblePosts() {
+  const visible = getFilteredPosts();
+  if (!visible.length) return;
+
+  visible.forEach(({ post }) => {
+    post.deleted = false;
+    post.edited = true;
+  });
 
   renderPosts();
 }
@@ -354,6 +434,17 @@ function loadWorkJson(event) {
     originalHtml = data.originalHtml || '';
     posts = data.posts || [];
 
+    posts = posts.map((post, index) => ({
+      id: post.id || makeId(index),
+      color: post.color || '#888888',
+      tab: post.tab || 'main',
+      name: post.name || 'KP',
+      text: post.text || '',
+      deleted: Boolean(post.deleted),
+      edited: Boolean(post.edited),
+      added: Boolean(post.added)
+    }));
+
     if (originalHtml) {
       const parser = new DOMParser();
       doc = parser.parseFromString(originalHtml, 'text/html');
@@ -366,6 +457,8 @@ function loadWorkJson(event) {
     downloadBtn.disabled = false;
     addPostBtn.disabled = false;
     saveWorkBtn.disabled = false;
+    bulkDeleteVisibleBtn.disabled = false;
+    bulkRestoreVisibleBtn.disabled = false;
 
     renderAll();
   };
