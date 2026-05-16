@@ -204,7 +204,7 @@ function renderPosts() {
   pageItems.forEach(({ post, realIndex }) => {
     const card = document.createElement('article');
     card.className = 'post-card';
-
+card.style.setProperty('--post-color', post.color || '#888888');
     if (post.deleted) card.classList.add('is-deleted');
     if (post.edited) card.classList.add('is-edited');
     if (post.added) card.classList.add('is-added');
