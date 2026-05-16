@@ -332,3 +332,24 @@ button:disabled {
     text-align: left;
   }
 }
+
+
+.post-card.is-deleted {
+  opacity: 0.58;
+
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--post-color, #888888) 12%, #cfcfcf),
+      color-mix(in srgb, var(--post-color, #888888) 6%, #bdbdbd)
+    ) !important;
+
+  border-color:
+    color-mix(in srgb, var(--post-color, #888888) 28%, #999) !important;
+}
+
+
+.post-card.is-deleted .post-badge.deleted {
+  background: rgba(80,80,80,0.9);
+  color: white;
+}
