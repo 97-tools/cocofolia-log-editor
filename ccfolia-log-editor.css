@@ -462,3 +462,8 @@ input,select,textarea{min-width:0}
  .add-panel h2,.add-panel textarea,.add-panel button{grid-column:auto}
  .work-save-row input[type=file],.dash-row input[type=file]{width:100%;font-size:13px}
 }
+
+.tool-kicker{margin:20px 0 6px;color:#b48576;letter-spacing:.22em;text-transform:uppercase;font-size:13px;font-weight:600}
+.tool-hero h1,.panel h2,.dash-card h2{font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic",sans-serif}
+.panel h2{font-weight:800;letter-spacing:.04em}
+.panel h2::after{content:"";display:block;width:34px;height:3px;margin-top:7px;border-radius:999px;background:linear-gradient(90deg,#e58c9b,#f0b36a)}
